@@ -1,6 +1,9 @@
 from keras.applications.resnet50 import ResNet50
-from keras.datasets import cifar10
+from keras.datasets import cifar100
+from keras.datasets import fashion_mnist
 
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from PIL import Image
 import numpy as np
 
@@ -15,10 +18,11 @@ with open('image-net-labels.json') as f:
     labels = json.load(f)
 
 ## データ読み込み
-(x_train, y_train), (x_test, y_test) = cifar10.load_data()
+# (x_train, y_train), (x_test, y_test) = cifar100.load_data()
+(x_train, y_train), (x_test, y_test) = fashion_mnist.load_data()
 
 ## データサンプリング
-x_test = x_test[:10]
+x_test = x_test[:500]
 
 ## 推論
 results = []
@@ -30,6 +34,9 @@ for i, array in enumerate(x_test):
     ## tensor化
     y = np.asarray(image)
     ## 次元拡張 (input tensorのshapeに合わせる)
+    if (len(a.shape) == 2):
+        y = np.array([ y, y, y ])
+        y = np.transpose(y, (1, 2, 0))
     y = np.expand_dims(y, axis=0)
 
     ## 推論
@@ -39,8 +46,21 @@ for i, array in enumerate(x_test):
 
     ## build result
     result = {}
+    result['image'] = image
     result['class'] = labels[str(y_class[0])]
-    result['probability'] = y_probs[0][y_class][0]
+    result['prob'] = y_probs[0][y_class][0]
     results.append(result)
 
-print(results)
+# sort results
+results = sorted(results, reverse=True, key=lambda v: v['prob'])
+
+## show detail
+## parse results
+results_list = np.reshape(results[:30], (-1, 3))
+
+for j, results in enumerate(results_list):
+    fig, ax = plt.subplots(1, 3, figsize=(10, 10))
+    for k, result in enumerate(results):
+        ax[k].imshow(np.asarray(result['image']))
+        ax[k].text(0.2, 0.2,  str(result['class'])[:20] + ': ' + str(result['prob']),
+            size=10, color='black', bbox={ 'facecolor': 'lightblue' })

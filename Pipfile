@@ -6,12 +6,6 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-keras = "*"
-pillow = "*"
-tensorflow = "*"
-numpy = "*"
-jupyter = "*"
-matplotlib = "*"
 
 [requires]
 python_version = "3.7"
